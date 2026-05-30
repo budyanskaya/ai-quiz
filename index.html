@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировочный тест по ИИ и ML</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --primary: #4a90e2;
+            --correct: #28a745;
+            --incorrect: #dc3545;
+            --text: #333333;
+            --border: #e0e0e0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1 { text-align: center; margin-top: 0; color: var(--primary); }
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 500;
+            color: #666;
+        }
+        .question-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        .options { list-style: none; padding: 0; margin: 0; }
+        .option {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option:hover:not(.disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .option input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+        
+        .option.correct { background: #d4edda; border-color: var(--correct); color: #155724; }
+        .option.incorrect { background: #f8d7da; border-color: var(--incorrect); color: #721c24; }
+        .option.disabled { pointer-events: none; opacity: 0.85; }
+        
+        .text-input, .match-select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+        .text-input:focus, .match-select:focus { outline: none; border-color: var(--primary); }
+        .text-input.disabled, .match-select.disabled { background: #f0f0f0; pointer-events: none; }
+        
+        /* Стили для сопоставления */
+        .match-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+        }
+        .match-label { flex: 1; font-weight: 500; min-width: 200px; }
+        .match-select { max-width: 300px; cursor: pointer; }
+        
+        /* Стили для последовательности */
+        .seq-list { list-style: none; padding: 0; margin: 0; }
+        .seq-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .seq-item.correct { background: #d4edda; border-color: var(--correct); color: #155724; }
+        .seq-item.incorrect { background: #f8d7da; border-color: var(--incorrect); color: #721c24; }
+        .seq-item.disabled { pointer-events: none; opacity: 0.85; }
+        .seq-controls button {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+        .seq-controls button:hover:not(:disabled) { background: #e9ecef; }
+        
+        .controls { display: flex; gap: 15px; margin-top: 20px; }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-check { background: var(--primary); color: white; }
+        .btn-check:hover { background: #357abd; }
+        .btn-next { background: #28a745; color: white; }
+        .btn-next:hover { background: #218838; }
+        .btn-restart { background: var(--primary); color: white; width: 100%; margin-top: 20px; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback.success { background: #d4edda; color: #155724; display: block; }
+        .feedback.error { background: #f8d7da; color: #721c24; display: block; }
+        
+        #result-screen { text-align: center; }
+        .score-circle {
+            width: 150px; height: 150px;
+            background: var(--primary); color: white;
+            border-radius: 50%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            margin: 20px auto; font-size: 2.5em; font-weight: bold;
+        }
+        .score-circle span { font-size: 0.4em; font-weight: normal; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎓 Тренировка: Искусственный Интеллект</h1>
+    
+    <div id="quiz-screen">
+        <div class="progress">
+            <span>Вопрос <strong id="q-current">1</strong> из <strong id="q-total">36</strong></span>
+            <span>Баллы: <strong id="score-live">0</strong></span>
+        </div>
+        
+        <div id="question-text" class="question-box"></div>
+        <ul id="options-list" class="options"></ul>
+        
+        <div id="feedback-msg" class="feedback"></div>
+        
+        <div class="controls">
+            <button id="btn-check" class="btn btn-check" onclick="checkAnswer()">Проверить ответ</button>
+            <button id="btn-next" class="btn btn-next hidden" onclick="nextQuestion()">Следующий вопрос</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h2>Тест завершён!</h2>
+        <div class="score-circle">
+            <span id="final-score">0%</span>
+            <span>правильных</span>
+        </div>
+        <p id="final-text"></p>
+        <button class="btn btn-restart" onclick="restartQuiz()">🔄 Пройти заново</button>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// ДАННЫЕ ТЕСТА
+// type: 'mc' - варианты ответа
+// type: 'text' - текстовое поле
+// type: 'match' - сопоставление (выпадающие списки)
+// type: 'sequence' - восстановление последовательности
+// ==========================================
+const quizDataRaw = [
+    // === ОБЫЧНЫЕ ВОПРОСЫ (mc) ===
+    { type: 'mc', q: "Какая промышленная задача ИИ наиболее актуальна для Индустрии 4.0:", options: ["создание экспертных систем для интеллектуальных СППР", "разработка интеллектуальных средств для взаимодействия машин в кибер-физических системах без вмешательства человека"], correct: [1] },
+    { type: 'mc', q: "Выберите верные утверждения", options: ["В настоящий момент для русского языка нет морфологического анализатора с какой-либо обработкой случаев морфологической неоднозначности", "Для всех рассмотренных инструментов текст нужно заранее поделить на токены", "Для рассмотренных инструментов морфологического анализа русского языка есть интерфейс на языке Python", "Pymorphy2 очень быстро работает, так как в его основе — нейросетевые методы"], correct: [2] },
+    { type: 'mc', q: "Что такое онтология в ИИ:", options: ["учение о познании", "определенная система категорий, являющихся следствием определенных взглядов на мир", "формальная спецификация разделяемой концептуальной модели", "учение о сущем или бытии"], correct: [2] },
+    { type: 'mc', q: "Выберите, какие из утверждений верны.", options: ["Глубокое обучение — это точный синоним теории информации", "Автор Грамматического словаря русского языка — академик Андрей Петрович Ершов", "Цепи Маркова названы в честь Андрея Андреевича Маркова", "Задача машинного перевода заинтересовала учёных лишь в 21 веке"], correct: [2] },
+    { type: 'mc', q: "Для каких целей в биометрической системе используется блок детектирования особых точек?", options: ["Шумоочистка", "Улучшить качество детектирования лицевого фрагмента", "Геометрические трансформации лицевого фрагмента для улучшения качества выделенного эмбеддинга", "Сравнение эмбеддингов"], correct: [2] },
+    { type: 'mc', q: "Банк настолько увлекся созданием цифровых сервисов, что больше стал походить на IT-компанию. А как уважающей себя IT-компании быть без собственного голосового ассистента? Конечно, никак! Общаясь с помощником, пользователь передает на сервер звуковые сообщения, а сервер, в свою очередь, преобразует их в текст. Описанная задача — это задача из области:", options: ["Speech Recognition", "CV", "OCR", "NLP"], correct: [0] },
+    { type: 'mc', q: "Как Джон Маккарти в статье «WHAT IS ARTIFICIAL INTELLIGENCE?» определил понятие ИИ:", options: ["«Автономные роботы и машины, способные решать сложнейшие задачи, которые не под силу человеку»", "«Глобальная компьютерная сеть, контролирующая жизнь»", "«Вычислительные механизмы для достижения целей»"], correct: [2] },
+    { type: 'mc', q: "Выберите верные утверждения", options: ["В основе инструментов для лемматизации текста часто лежат словари", "Токенизация — это алгоритм выделения из текста знаков препинания", "Стемминг — это деление текста на слова"], correct: [0] },
+    { type: 'mc', q: "Какие из следующих подходов могут использоваться для решения задачи распознавания лиц?", options: ["SSD", "Light CNN", "YOLO", "MTCNN"], correct: [1, 3] },
+    { type: 'mc', q: "Как называются современные базы знаний DBPedia и WikiData?", options: ["Пространства знаний", "Графы знаний", "Библиотеки знаний", "Хранилища знаний"], correct: [1] },
+    { type: 'mc', q: "Выберите, какие из утверждений не верны.", options: ["Каждая задача NLP имеет во всех языках примерно одинаковую сложность", "Обработка естественного языка и лингвистика — это одно и то же", "Задачу языкового моделирования часто формулируют как задачу предсказания следующего слова", "Методы кластеризации текстов обязательно требуют разметки людьми"], correct: [0, 1, 3] },
+    { type: 'mc', q: "Какие теории являются истоками для работ в области ИИ?", options: ["Дифференциальные исчисления", "Булева алгебра", "Оптика", "Логика высказываний", "Арифметика"], correct: [1, 3] },
+    { type: 'mc', q: "Маркетинговая кампания дала свои плоды. С увеличением числа клиентов увеличилось и число обращений в службу поддержки банка. Руководство решило создать умного текстового чат-бота, который мог бы отвечать на несложные вопросы клиентов в чате с банком. В процессе общения бота с клиентом в чате решаются задачи из области:", options: ["Speech Recognition", "NLP", "CV", "OCR"], correct: [1] },
+    { type: 'mc', q: "На какие разделы делят алгоритмы машинного обучения?", options: ["Обучение без запоминания", "Обучение без учителя", "Обучение с запоминанием", "Обучение без цели", "Обучение со стимулом", "Обучение с учителем"], correct: [1, 4, 5] },
+    { type: 'mc', q: "Какие ключевые блоки могут входит в состав системы лицевой биометрии?", options: ["Блок детектирования объектов интереса", "Блок сравнения эмбеддингов", "Блок выделения эмбеддинга для области объекта интереса", "Блок детектирования особых точек"], correct: [0, 1, 2, 3] },
+    { type: 'mc', q: "Не секрет, что банк зарабатывает на своих клиентах. Конечно, в новых странах банк будет привлекать и новых клиентов. Имеются исторические данные как о клиентах, так и о сумме, которую банк заработал за год на том или ином клиенте. Для прогнозирования того, сколько банк заработает на новых клиентах, необходимо решить задачу", options: ["Коллаборативной фильтрации", "Регрессии", "Классификации", "Поиска ассоциативных правил"], correct: [1] },
+    { type: 'mc', q: "С какой проблемой столкнулись разработчики первых интеллектуальных программ:", options: ["комбинаторный взрыв числа промежуточных шагов", "вычислительные трудности при символьный обработке списков", "отсутствие точных теоретических оснований, и описания конечных целей"], correct: [0] },
+    { type: 'mc', q: "Что подразумевает под собой использование стоимостной функции на базе триплетов?", options: ["Обученный экстрактор должен генерировать схожие эмбеддинги для отрицательного и опорного примера, и различные для положительного и опорного", "Обученный экстрактор должен генерировать схожие эмбеддинги для положительного и опорного примера, и различные для отрицательного и опорного", "Использование трех примера одного и того же класса на каждой итерации обучения экстрактора эмбеддингов", "Использование трех примеров для обучения экстрактора эмбеддингов (опорный пример, положительный того же класса, что и опорный, отрицательный отличного класса от опорного)"], correct: [1, 3] },
+    { type: 'mc', q: "С какой задачей ИИ на начало 2025 года справляется лучше?", options: ["Задавать вопросы", "Отвечать на вопросы"], correct: [1] },
+    { type: 'mc', q: "Банк «Для Людей» внедряет автоматическую систему, позволяющую заранее определить: вернет клиент кредит, или не вернет. Для построения такой системы используются исторические данные о ранее выданных кредитах, где собрана некоторая информация о заемщиках, размерах кредитов, и тому подобное, а также информация о том, был возвращен кредит или нет. Такая автоматическая система будет решать задачу:", options: ["Классификации", "Поиска ассоциативных правил", "Регрессии", "Коллаборативной фильтрации"], correct: [0] },
+    { type: 'mc', q: "Укажите название наиболее распространенного типа цифровых изображений, которое представляется в виде матрицы пикселей.", options: ["2D", "Пиксельное", "Растровое", "Векторное"], correct: [2] },
+    { type: 'mc', q: "Укажите, что НЕ входит в основные направления ИИ:", options: ["распознавание образов", "онтологии", "репрезентация знаний", "машинное обучение", "оптимизация", "объектно-ориентированное программирование", "логические рассуждения", "численные методы", "эпистемология"], correct: [5] },
+    { type: 'mc', q: "Кто из мыслителей доказал, что продукционные системы, или системы правил «Если-То», являются универсальным вычислительным механизмом, эквивалентным машине Тьюринга:", options: ["Леонардо Торрес и Кеведо", "Альфред Норт Уайтхед", "Норберта Винера", "Жак де Вокансон", "Людвиг Витгенштейн", "Рудольф Карнап", "Эмиль Леон Пост", "Чарльз Бэббидж", "Роджер Бэкон", "Дьёрдь Пойа", "Бертран Рассел", "Работы Алана Тьюринга"], correct: [6] },
+    { type: 'mc', q: "Что является главными преимуществами баз и графов знаний:", options: ["отсутствие зависимости от субъективных человеческих факторов", "открытость", "простота тиражирования", "быстрота поиска необходимой информации"], correct: [0, 1, 3] },
+    { type: 'mc', q: "К какой категории можно отнести разговорные системы и интеллектуальные чат-боты?", options: ["Системы журналирования диалогов", "Системы интеллектуального управления", "Естественные интерфейсы"], correct: [2] },
+    { type: 'mc', q: "Перечислите, решение каких задач осуществляется в рамках подхода Top-Down:", options: ["поведение биологический систем", "распознавание образов с помощью нейронных сетей", "логические рассуждение", "моделирование эмоций", "понимание и синтез речи"], correct: [2, 4] },
+    { type: 'mc', q: "Выберите возможные определения компьютерного зрения:", options: ["Построение точных решений о физических объектах на основе изображений", "Вычисление свойств объектов 3D мира на основании одного или нескольких цифровых изображений", "Моделирование объектов 3D мира на основе признаков объектов", "Принятие решений о реальных физических объектах или окружающем мире на основе данных, полученных при помощи сенсоров"], correct: [0, 1, 3] },
+    { type: 'mc', q: "Основную цель машинного обучения: выделение некоторой скрытой закономерности в исходных данных, позволяющих делать надежные предсказания для новых данных", options: ["Верно", "Неверно"], correct: [0] },
+    { type: 'mc', q: "Что является одним из наиболее важных признаков интеллектуальности:", options: ["способность к обучению", "способность решать любую сложную вычислительную задачу"], correct: [0] },
+    { type: 'mc', q: "Выберете правильную формулировку теста Тьюринга:", options: ["«Если компьютер выигрывает у человека в шахматы или другие интеллектуальные игры, считается, что такой компьютер прошёл тест»", "«Если компьютер может работать так, что человек не в состоянии определить, кем он общается — с другим человеком или с машиной, — считается, что такой компьютер прошел тест»", "«Если компьютер способен статистически достоверно решать математические задачи быстрее, чем человек, считается, что такой компьютер прошёл тест»"], correct: [1] },
+    
+    // === ТЕКСТОВЫЕ ВОПРОСЫ ===
+    { type: 'text', q: "Как называется методика создания дополнительных обучающих примеров путем преобразования имеющихся и их разметки в соответствии с априорными знаниями о генеральной совокупности.", correct: ["аугментация данных"] },
+    { type: 'text', q: "Как называется способ представления знаний с помощью утверждений вида “Если условие, то действие”:", correct: ["продукционная модель"] },
+
+    // === НОВЫЕ ТИПЫ: СОПОСТАВЛЕНИЕ И ПОСЛЕДОВАТЕЛЬНОСТЬ ===
+    { type: 'match', q: "Соотнесите сценарии биометрических систем с типами задач:", 
+      items: ["Система видеонаблюдения на вокзале (ищет совпадение 1:N, человека может не быть в базе)", "Поиск людей на круизном лайнере (ищет совпадение 1:N, человек 100% есть в базе)", "Разблокировка смартфона Face ID/отпечаток (проверка 1:1)"], 
+      options: ["Идентификация на открытом множестве", "Идентификация на закрытом множестве", "Верификация"], 
+      correct: [0, 1, 2] }, // Индексы options, соответствующие items[0], items[1], items[2]
+
+    { type: 'sequence', q: "Определите правильную последовательность выполнения основных процессоров системы синтеза речи:", 
+      items: ["Лингвистический текстовый процессор", "Фонетический процессор", "Просодический процессор", "Акустический процессор"], 
+      correct: [0, 1, 2, 3] }, // Индексы items в правильном порядке (1,2,3,4)
+
+    { type: 'match', q: "Соотнесите технологии/методы с этапами обработки речевого сигнала:", 
+      items: ["Модель гауссовых смесей (GMM) с UBM, модели JFA", "Методы шумоочистки, определения речевой активности, выделения MFCC", "Линейный дискриминантный анализ (LDA), вероятностный LDA (PLDA)", "Методы кластеризации, вариационный байесовский анализ"], 
+      options: ["Диаграмма", "Сравнение моделей", "Предобработка", "Построение модели"], 
+      correct: [3, 2, 1, 0] }, // Настройте индексы, если ключ в вашем файле отличается
+
+    { type: 'match', q: "Распределите методы машинного обучения по группам:", 
+      items: ["Метод опорных векторов (SVM)", "Наивный байесовский классификатор", "Методы деревьев решений", "PageRank"], 
+      options: ["Обучение с учителем", "Обучение без учителя"], 
+      correct: [0, 0, 0, 1] }
+];
+
+// ==========================================
+// ЛОГИКА ТЕСТА
+// ==========================================
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function initQuiz() {
+    currentQuestions = quizDataRaw.map(q => {
+        if (q.type === 'text') return { question: q.q, correct: q.correct, type: 'text' };
+        if (q.type === 'sequence') {
+            // Для последовательности перемешиваем items при загрузке
+            const shuffled = shuffle(q.items.map((item, idx) => ({ text: item, orig: idx })));
+            return { question: q.q, items: shuffled, correct: q.correct, type: 'sequence' };
+        }
+        if (q.type === 'match') {
+            // Для сопоставления оставляем items в порядке, опции можно оставить фиксированными
+            return { question: q.q, items: q.items, options: q.options, correct: q.correct, type: 'match' };
+        }
+        // mc
+        const originalIndices = q.options.map((opt, idx) => ({ text: opt, originalIdx: idx }));
+        const shuffledOptions = shuffle(originalIndices);
+        const newCorrect = shuffledOptions.map((opt, idx) => q.correct.includes(opt.originalIdx) ? idx : -1).filter(idx => idx !== -1);
+        return { question: q.q, options: shuffledOptions.map(o => o.text), correct: newCorrect, type: 'mc' };
+    });
+    
+    shuffle(currentQuestions);
+    
+    currentIndex = 0;
+    score = 0;
+    document.getElementById('score-live').textContent = 0;
+    document.getElementById('q-total').textContent = currentQuestions.length;
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    
+    loadQuestion();
+}
+
+function loadQuestion() {
+    answered = false;
+    const q = currentQuestions[currentIndex];
+    document.getElementById('q-current').textContent = currentIndex + 1;
+    document.getElementById('question-text').textContent = q.question;
+    document.getElementById('feedback-msg').style.display = 'none';
+    document.getElementById('btn-check').disabled = false;
+    document.getElementById('btn-next').classList.add('hidden');
+    
+    const container = document.getElementById('options-list');
+    container.innerHTML = '';
+    
+    if (q.type === 'text') {
+        const li = document.createElement('li');
+        li.className = 'option';
+        li.innerHTML = `<input type="text" id="text-answer" class="text-input" placeholder="Введите ваш ответ...">`;
+        container.appendChild(li);
+    } else if (q.type === 'match') {
+        const wrapper = document.createElement('li');
+        wrapper.className = 'option';
+        wrapper.style.display = 'block';
+        q.items.forEach((item, idx) => {
+            const row = document.createElement('div');
+            row.className = 'match-row';
+            row.dataset.itemIdx = idx;
+            let optsHtml = '<option value="">Выберите...</option>';
+            q.options.forEach((opt, oIdx) => {
+                optsHtml += `<option value="${oIdx}">${opt}</option>`;
+            });
+            row.innerHTML = `<span class="match-label">${item}</span><select class="match-select">${optsHtml}</select>`;
+            wrapper.appendChild(row);
+        });
+        container.appendChild(wrapper);
+    } else if (q.type === 'sequence') {
+        const wrapper = document.createElement('li');
+        wrapper.className = 'option';
+        wrapper.style.display = 'block';
+        const ul = document.createElement('ul');
+        ul.className = 'seq-list';
+        
+        q.items.forEach((item, idx) => {
+            const li = document.createElement('li');
+            li.className = 'seq-item';
+            li.dataset.originalIdx = item.orig;
+            li.innerHTML = `
+                <span class="seq-text">${item.text}</span>
+                <div class="seq-controls">
+                    <button onclick="moveSeqItem(this, -1)">⬆️</button>
+                    <button onclick="moveSeqItem(this, 1)">⬇️</button>
+                </div>
+            `;
+            ul.appendChild(li);
+        });
+        wrapper.appendChild(ul);
+        container.appendChild(wrapper);
+    } else {
+        // mc
+        q.options.forEach((opt, idx) => {
+            const li = document.createElement('li');
+            li.className = 'option';
+            li.dataset.index = idx;
+            li.innerHTML = `
+                <input type="checkbox" id="opt-${idx}" value="${idx}">
+                <label for="opt-${idx}">${opt}</label>
+            `;
+            li.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    const cb = li.querySelector('input');
+                    cb.checked = !cb.checked;
+                }
+            });
+            container.appendChild(li);
+        });
+    }
+}
+
+function moveSeqItem(btn, dir) {
+    if (answered) return;
+    const li = btn.closest('.seq-item');
+    const ul = li.parentElement;
+    if (dir === -1 && li.previousElementSibling) {
+        ul.insertBefore(li, li.previousElementSibling);
+    } else if (dir === 1 && li.nextElementSibling) {
+        ul.insertBefore(li.nextElementSibling, li);
+    }
+}
+
+function checkAnswer() {
+    if (answered) return;
+    const q = currentQuestions[currentIndex];
+    let isCorrect = false;
+
+    if (q.type === 'text') {
+        const input = document.getElementById('text-answer');
+        if (!input) return;
+        const userAns = input.value.trim().toLowerCase();
+        if (!userAns) { alert("Введите ответ!"); return; }
+        isCorrect = q.correct.some(ans => userAns === ans.toLowerCase());
+        input.disabled = true;
+        input.classList.add('disabled');
+        input.style.borderColor = isCorrect ? 'var(--correct)' : 'var(--incorrect)';
+    } 
+    else if (q.type === 'mc') {
+        const selected = Array.from(document.querySelectorAll('.option input:checked')).map(cb => parseInt(cb.value));
+        if (selected.length === 0) { alert("Выберите хотя бы один вариант ответа!"); return; }
+        const correctSet = new Set(q.correct);
+        const selectedSet = new Set(selected);
+        isCorrect = correctSet.size === selectedSet.size && [...correctSet].every(val => selectedSet.has(val));
+        
+        document.querySelectorAll('.option').forEach(li => {
+            const idx = parseInt(li.dataset.index);
+            li.classList.add('disabled');
+            li.querySelector('input').disabled = true;
+            if (correctSet.has(idx)) li.classList.add('correct');
+            else if (selectedSet.has(idx)) li.classList.add('incorrect');
+        });
+    }
+    else if (q.type === 'match') {
+        let allFilled = true;
+        document.querySelectorAll('.match-row').forEach(row => {
+            if (row.querySelector('.match-select').value === "") allFilled = false;
+        });
+        if (!allFilled) { alert("Заполните все поля сопоставления!"); return; }
+        
+        isCorrect = true;
+        document.querySelectorAll('.match-row').forEach(row => {
+            const idx = parseInt(row.dataset.itemIdx);
+            const val = parseInt(row.querySelector('.match-select').value);
+            const ok = val === q.correct[idx];
+            if (!ok) isCorrect = false;
+            row.querySelector('.match-select').style.borderColor = ok ? 'var(--correct)' : 'var(--incorrect)';
+            row.querySelector('.match-select').disabled = true;
+        });
+    }
+    else if (q.type === 'sequence') {
+        const items = Array.from(document.querySelectorAll('.seq-item'));
+        const currentOrder = items.map(li => parseInt(li.dataset.originalIdx));
+        isCorrect = JSON.stringify(currentOrder) === JSON.stringify(q.correct);
+        
+        items.forEach((li, pos) => {
+            li.classList.add('disabled');
+            const expectedOrig = q.correct[pos];
+            const isOk = parseInt(li.dataset.originalIdx) === expectedOrig;
+            li.classList.add(isOk ? 'correct' : 'incorrect');
+            li.querySelectorAll('button').forEach(b => b.disabled = true);
+        });
+    }
+
+    if (isCorrect) score++;
+    document.getElementById('score-live').textContent = score;
+    
+    const fb = document.getElementById('feedback-msg');
+    fb.className = `feedback ${isCorrect ? 'success' : 'error'}`;
+    if (q.type === 'text') fb.textContent = isCorrect ? "✅ Верно!" : `❌ Неверно. Правильный ответ: ${q.correct[0]}`;
+    else if (q.type === 'sequence') fb.textContent = isCorrect ? "✅ Верно!" : `❌ Неверно. Правильная последовательность: ${q.items.map(i => i.text).join(' → ')}`;
+    else if (q.type === 'match') fb.textContent = isCorrect ? "✅ Верно!" : `❌ Есть ошибки. Правильные пары подсвечены.`;
+    else fb.textContent = isCorrect ? "✅ Верно!" : `❌ Неверно. Правильные варианты выделены зеленым.`;
+    fb.style.display = 'block';
+    
+    answered = true;
+    document.getElementById('btn-check').disabled = true;
+    document.getElementById('btn-next').classList.remove('hidden');
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < currentQuestions.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    
+    const percent = Math.round((score / currentQuestions.length) * 100);
+    document.getElementById('final-score').textContent = percent + '%';
+    
+    let msg = "";
+    if (percent === 100) msg = "🏆 Идеально! Вы эксперт в ИИ.";
+    else if (percent >= 80) msg = "👏 Отличный результат! Почти всё верно.";
+    else if (percent >= 60) msg = "📚 Хорошо, но есть над чем поработать.";
+    else msg = "💡 Рекомендуем повторить материал и попробовать снова.";
+    document.getElementById('final-text').textContent = msg;
+}
+
+function restartQuiz() {
+    initQuiz();
+}
+
+window.onload = initQuiz;
+</script>
+
+</body>
+</html>
